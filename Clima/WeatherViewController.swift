@@ -7,9 +7,12 @@
 //
 
 import UIKit
+import CoreLocation
+import Alamofire
+import SwiftyJSON
 
 
-class WeatherViewController: UIViewController {
+class WeatherViewController: UIViewController, CLLocationManagerDelegate {
     
     //Constants
     let WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather"
@@ -17,6 +20,7 @@ class WeatherViewController: UIViewController {
     
 
     //TODO: Declare instance variables here
+    let locationManager = CLLocationManager()
     
 
     
@@ -28,12 +32,10 @@ class WeatherViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        
-        //TODO:Set up the location manager here.
-    
-        
-        
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
     }
     
     
@@ -41,7 +43,19 @@ class WeatherViewController: UIViewController {
     //MARK: - Networking
     /***************************************************************/
     
-    //Write the getWeatherData method here:
+    func getWeatherData(parameters: [String: String], url: String) {
+
+        Alamofire.request(WEATHER_URL, method: .get,  parameters: parameters).responseJSON {
+            response in
+
+            if response.result.isSuccess {
+                print("success")
+            } else {
+                print("error")
+            }
+        }
+
+    }
     
 
     
@@ -74,11 +88,28 @@ class WeatherViewController: UIViewController {
     /***************************************************************/
     
     
-    //Write the didUpdateLocations method here:
-    
-    
-    
-    //Write the didFailWithError method here:
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+
+        let location : CLLocation = locations[locations.count - 1]
+
+        if location.horizontalAccuracy > 0 {
+            locationManager.stopUpdatingLocation()
+            let latitude : CLLocationDegrees = location.coordinate.latitude
+            let longitude : CLLocationDegrees = location.coordinate.longitude
+
+            let params :  [String : String] = ["lat": String(latitude), "long": String(longitude), "appid": APP_ID]
+
+            getWeatherData(parameters: params, url: WEATHER_URL)
+        }
+
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+
+        print(error)
+        cityLabel.text = "There was an error trying to get your location."
+
+    }
     
     
     
