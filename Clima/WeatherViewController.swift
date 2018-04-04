@@ -13,18 +13,13 @@ import SwiftyJSON
 
 
 class WeatherViewController: UIViewController, CLLocationManagerDelegate {
-    
-    //Constants
+
     let WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather"
     let APP_ID = "e72ca729af228beabd5d20e3b7749713"
-    
 
-    //TODO: Declare instance variables here
     let locationManager = CLLocationManager()
-    
+    let weatherDatamodel = WeatherDataModel()
 
-    
-    //Pre-linked IBOutlets
     @IBOutlet weak var weatherIcon: UIImageView!
     @IBOutlet weak var cityLabel: UILabel!
     @IBOutlet weak var temperatureLabel: UILabel!
@@ -49,25 +44,36 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
             response in
 
             if response.result.isSuccess {
-                print("success")
+                let weatherJSON : JSON = JSON(response.result.value!)
+                self.updateWeatherData(json: weatherJSON)
+                self.updateUIWithWeather()
             } else {
-                print("error")
+                self.showErrorMessage()
             }
         }
 
     }
-    
 
-    
-    
-    
-    
-    
     //MARK: - JSON Parsing
     /***************************************************************/
    
     
-    //Write the updateWeatherData method here:
+    func updateWeatherData(json: JSON) {
+
+        if let temp = json["main"]["temp"].double {
+            let cityName = json["name"].stringValue
+            let conditionID = json["weather"][0]["id"].intValue
+
+            weatherDatamodel.temperature = Int(temp - 273.15)
+            weatherDatamodel.city = cityName
+            weatherDatamodel.condition = conditionID
+            weatherDatamodel.weatherIconName = weatherDatamodel.updateWeatherIcon(condition: conditionID)
+        } else {
+            showErrorMessage()
+        }
+
+
+    }
     
 
     
@@ -76,8 +82,15 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
     //MARK: - UI Updates
     /***************************************************************/
     
-    
-    //Write the updateUIWithWeatherData method here:
+    func showErrorMessage() {
+        cityLabel.text = "Weather unavailable"
+    }
+
+    func updateUIWithWeather() {
+        cityLabel.text = weatherDatamodel.city
+        temperatureLabel.text = "\(weatherDatamodel.temperature)"
+        weatherIcon.image = UIImage(named: weatherDatamodel.weatherIconName)
+    }
     
     
     
@@ -94,10 +107,12 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate {
 
         if location.horizontalAccuracy > 0 {
             locationManager.stopUpdatingLocation()
+            locationManager.delegate = nil
+
             let latitude : CLLocationDegrees = location.coordinate.latitude
             let longitude : CLLocationDegrees = location.coordinate.longitude
 
-            let params :  [String : String] = ["lat": String(latitude), "long": String(longitude), "appid": APP_ID]
+            let params :  [String : String] = ["lat": String(latitude), "lon": String(longitude), "appid": APP_ID]
 
             getWeatherData(parameters: params, url: WEATHER_URL)
         }
