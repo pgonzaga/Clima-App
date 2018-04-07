@@ -19,10 +19,25 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate, Change
 
     let locationManager = CLLocationManager()
     let weatherDatamodel = WeatherDataModel()
+    var celsius : Bool = true
 
     @IBOutlet weak var weatherIcon: UIImageView!
     @IBOutlet weak var cityLabel: UILabel!
     @IBOutlet weak var temperatureLabel: UILabel!
+
+    @IBAction func changeSwitchUnit(_ sender: UISwitch) {
+
+        if sender.isOn {
+            let newTemperature : Int =  kelvinToCelsius(degrees: weatherDatamodel.temperature)
+            weatherDatamodel.temperature = newTemperature
+        } else {
+            let newTemperature : Int =  celsiusToKelvin(degrees: weatherDatamodel.temperature)
+            weatherDatamodel.temperature = newTemperature
+        }
+
+        temperatureLabel.text = "\(weatherDatamodel.temperature)"
+
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -60,7 +75,7 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate, Change
             let cityName = json["name"].stringValue
             let conditionID = json["weather"][0]["id"].intValue
 
-            weatherDatamodel.temperature = Int(temp - 273.15)
+            weatherDatamodel.temperature = calcTemp(degrees: temp)
             weatherDatamodel.city = cityName
             weatherDatamodel.condition = conditionID
             weatherDatamodel.weatherIconName = weatherDatamodel.updateWeatherIcon(condition: conditionID)
@@ -114,19 +129,43 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate, Change
     //MARK: - Change City Delegate methods
     /***************************************************************/
     func userHasEnteredCityName(city: String) {
+
         let params : [String: String] = ["q": city, "appid": APP_ID]
         getWeatherData(parameters: params, url: WEATHER_URL)
+
     }
     
     //Write the PrepareForSegue Method here
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+
         if segue.identifier == "changeCityName" {
             let destinationVC = segue.destination as! ChangeCityViewController
             destinationVC.delegate = self
         }
+
     }
-    
+
+    //MARK: - Temperature measurement
+    /***************************************************************/
+
+    func calcTemp(degrees: Double) -> Int{
+
+        if celsius {
+            return Int(degrees - 273.15)
+        } else {
+            return Int(degrees)
+        }
+
+    }
+
+    func celsiusToKelvin(degrees: Int) -> Int {
+        return degrees + 273
+    }
+
+    func kelvinToCelsius(degrees: Int) -> Int {
+        return degrees - 273
+    }
 }
 
 
