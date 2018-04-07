@@ -24,7 +24,6 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate, Change
     @IBOutlet weak var cityLabel: UILabel!
     @IBOutlet weak var temperatureLabel: UILabel!
 
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         locationManager.delegate = self
@@ -32,8 +31,6 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate, Change
         locationManager.requestWhenInUseAuthorization()
         locationManager.startUpdatingLocation()
     }
-    
-    
     
     //MARK: - Networking
     /***************************************************************/
@@ -56,8 +53,7 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate, Change
 
     //MARK: - JSON Parsing
     /***************************************************************/
-   
-    
+
     func updateWeatherData(json: JSON) {
 
         if let temp = json["main"]["temp"].double {
@@ -72,13 +68,8 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate, Change
             showErrorMessage()
         }
 
-
     }
-    
 
-    
-    
-    
     //MARK: - UI Updates
     /***************************************************************/
     
@@ -123,7 +114,8 @@ class WeatherViewController: UIViewController, CLLocationManagerDelegate, Change
     //MARK: - Change City Delegate methods
     /***************************************************************/
     func userHasEnteredCityName(city: String) {
-        print(city)
+        let params : [String: String] = ["q": city, "appid": APP_ID]
+        getWeatherData(parameters: params, url: WEATHER_URL)
     }
     
     //Write the PrepareForSegue Method here
